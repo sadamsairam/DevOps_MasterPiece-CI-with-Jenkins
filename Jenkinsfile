@@ -15,9 +15,15 @@ pipeline {
 
     stages {
 
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+            }
+        }
+
         stage('Checkout git') {
             steps {
-                git branch: 'main', url:'https://github.com/praveensirvi1212/DevOps_MasterPiece-CI-with-Jenkins.git'
+                git branch: 'main', url: 'https://github.com/praveensirvi1212/DevOps_MasterPiece-CI-with-Jenkins.git'
             }
         }
 
@@ -29,12 +35,11 @@ pipeline {
             }
         }
 
-        stage ('Build & JUnit Test') {
+        stage('Build & JUnit Test') {
             steps {
                 sh 'mvn clean install'
             }
         }
-
 
         stage('Docker Build') {
             steps {
@@ -44,13 +49,19 @@ pipeline {
             }
         }
 
-        stage ('Docker Image Push') {
+        stage('Docker Image Push') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'sairamsadamss', usernameVariable: 'DOCKER_USER', passwordVariable: 'Sairam@12345')]) {
+                withCredentials([usernamePassword(
+                    credentialsId: 'sairamsadamss',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
                     sh """
-                    docker login -u $DOCKER_USER -p $DOCKER_PASS
+                    echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+
                     docker push ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT}
-                    docker rmi ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT}
+
+                    docker rmi ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT} || true
                     """
                 }
             }
@@ -61,7 +72,7 @@ pipeline {
                 script {
                     if (fileExists('DevOps_MasterPiece-CD-with-argocd')) {
                         dir("DevOps_MasterPiece-CD-with-argocd") {
-                            sh 'git pull'
+                            sh 'git pull origin feature'
                         }
                     } else {
                         sh 'git clone -b feature https://github.com/praveensirvi1212/DevOps_MasterPiece-CD-with-argocd.git'
@@ -92,6 +103,7 @@ pipeline {
                         git checkout feature
                         git add .
                         git commit -m "Updated image ${VERSION}-${GIT_COMMIT}" || true
+
                         git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} feature
                         """
                     }
@@ -103,6 +115,114 @@ pipeline {
     post {
         always {
             echo "Pipeline Completed"
+            cleanWs()
         }
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
