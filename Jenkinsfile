@@ -4,9 +4,9 @@ pipeline {
     environment {
         NAME = "spring-app"
         VERSION = "${env.BUILD_ID}"
-        IMAGE_REPO = "praveensirvi"
+        IMAGE_REPO = "sairamsadamss"
         GIT_REPO_NAME = "DevOps_MasterPiece-CD-with-argocd"
-        GIT_USER_NAME = "praveensirvi1212"
+        GIT_USER_NAME = "sadamsairam"
     }
 
     tools {
