@@ -25,7 +25,7 @@ pipeline {
         stage('Checkout Latest Code (FORCE FRESH)') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/praveensirvi1212/DevOps_MasterPiece-CI-with-Jenkins.git'
+                url: 'https://github.com/sadamsairam/DevOps_MasterPiece-CI-with-Jenkins.git'
             }
         }
 
