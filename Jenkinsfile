@@ -1,4 +1,4 @@
-pipeline {
+peline {
     agent any
 
     environment {
@@ -15,27 +15,32 @@ pipeline {
 
     stages {
 
-        stage('Clean Workspace') {
+        stage('Clean Workspace (FULL RESET)') {
             steps {
                 cleanWs()
+                deleteDir()
             }
         }
 
-        stage('Checkout git') {
+        stage('Checkout Latest Code (FORCE FRESH)') {
             steps {
-                git branch: 'main', url: 'https://github.com/praveensirvi1212/DevOps_MasterPiece-CI-with-Jenkins.git'
+                git branch: 'main',
+                url: 'https://github.com/praveensirvi1212/DevOps_MasterPiece-CI-with-Jenkins.git'
             }
         }
 
-        stage('Set Commit ID') {
+        stage('Force Git Latest Commit') {
             steps {
                 script {
+                    sh 'git fetch --all'
+                    sh 'git reset --hard origin/main'
                     env.GIT_COMMIT = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
+                    echo "Using commit: ${env.GIT_COMMIT}"
                 }
             }
         }
 
-        stage('Build & JUnit Test') {
+        stage('Build & Test') {
             steps {
                 sh 'mvn clean install'
             }
@@ -44,12 +49,13 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh """
-                docker build -t ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT} .
+                docker build --no-cache \
+                -t ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT} .
                 """
             }
         }
 
-        stage('Docker Image Push') {
+        stage('Docker Push') {
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'sairamsadamss',
@@ -58,55 +64,8 @@ pipeline {
                 )]) {
                     sh """
                     echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-
                     docker push ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT}
-
-                    docker rmi ${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT} || true
                     """
-                }
-            }
-        }
-
-        stage('Clone/Pull k8s deployment Repo') {
-            steps {
-                script {
-                    if (fileExists('DevOps_MasterPiece-CD-with-argocd')) {
-                        dir("DevOps_MasterPiece-CD-with-argocd") {
-                            sh 'git pull origin feature'
-                        }
-                    } else {
-                        sh 'git clone -b feature https://github.com/praveensirvi1212/DevOps_MasterPiece-CD-with-argocd.git'
-                    }
-                }
-            }
-        }
-
-        stage('Update deployment Manifest') {
-            steps {
-                dir("DevOps_MasterPiece-CD-with-argocd/yamls") {
-                    sh """
-                    sed -i "s#${IMAGE_REPO}/${NAME}:.*#${IMAGE_REPO}/${NAME}:${VERSION}-${GIT_COMMIT}#g" deployment.yaml
-                    cat deployment.yaml
-                    """
-                }
-            }
-        }
-
-        stage('Commit & Push changes') {
-            steps {
-                withCredentials([string(credentialsId: 'GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-                    dir("DevOps_MasterPiece-CD-with-argocd") {
-                        sh """
-                        git config user.email "praveen@gmail.com"
-                        git config user.name "praveen"
-
-                        git checkout feature
-                        git add .
-                        git commit -m "Updated image ${VERSION}-${GIT_COMMIT}" || true
-
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} feature
-                        """
-                    }
                 }
             }
         }
@@ -118,111 +77,4 @@ pipeline {
             cleanWs()
         }
     }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}}
